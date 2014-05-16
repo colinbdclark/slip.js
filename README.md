@@ -31,7 +31,7 @@ To decode a SLIP packet, call `decode()`. Whenever the `slip.Decoder` detects th
     </tr>
     <tr>
         <td>msg</td>
-        <td>`Uint8Array`</td>
+        <td><code>Uint8Array</code></td>
         <td>The decoded message, with SLIP characters removed.</td>
     </tr>
 </table>
