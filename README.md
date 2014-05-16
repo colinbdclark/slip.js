@@ -14,16 +14,14 @@ Encoding is stateless and synchronous. `slip.encode()` takes any array-like obje
 
 #### Example
 
-<pre><code>
-var message = new Uint8Array([99, 97, 116, 33]);
-var slipEncoded = slip.encoded(message); // Result is [192, 99, 97, 33, 192].
-</pre></code>
+<pre><code>var message = new Uint8Array([99, 97, 116, 33]);
+var slipEncoded = slip.encode(message); // Result is [192, 99, 97, 33, 192]</pre></code>
 
 ### Decoding
 
 Decoding is stateful and asynchronous. You need to instantiate a `slip.Decoder` object, providing a callback that will be invoked whenever a complete message is received. By default, messages are limited to 100 MB in size. You can increase this value by providing a `maxBufferSize` as the second argument to the `Decoder` constructor, specified in bytes.
 
-As incoming SLIP packets are received, `decode()` should be invoked. Whenever the `slip.Decoder` detects the end of an incoming message, it will call its `onMessage` callback. The `onMessage` callback's signature is:
+To decode a SLIP packet, call `decode()`. Whenever the `slip.Decoder` detects the end of an incoming message, it will call its `onMessage` callback. The `onMessage` callback's signature is:
 
 <table>
     <tr>
@@ -36,19 +34,17 @@ As incoming SLIP packets are received, `decode()` should be invoked. Whenever th
         <td>`Uint8Array`</td>
         <td>The decoded message, with SLIP characters removed.</td>
     </tr>
-</table
+</table>
 
 #### Example
 
-<pre><code>
-var onMessage = function (msg) {
+<pre><code>var onMessage = function (msg) {
     console.log("A SLIP message was received! Here is it: " + msg);
 };
 
 var decoder = new slip.Decoder(onMessage, 209715200);
 decoder.decode(packet);
-decoder.decode(otherPacket);
-</pre></code>
+decoder.decode(otherPacket);</pre></code>
 
 License
 -------
