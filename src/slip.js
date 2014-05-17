@@ -34,6 +34,10 @@ var slip = slip || {};
         return expanded;
     };
 
+    slip.sliceByteArray = function (arr, start, end) {
+        return new Uint8Array(arr.buffer.slice(start, end));
+    };
+
     /**
      * SLIP encodes a byte array.
      *
@@ -71,7 +75,7 @@ var slip = slip || {};
         }
 
         encoded[j] = slip.END;
-        return encoded.subarray(0, j + 1);
+        return slip.sliceByteArray(encoded, 0, j + 1);
     };
 
     /**
@@ -81,10 +85,17 @@ var slip = slip || {};
      * @param {Function} onMessage a callback function that will be invoked when a message has been fully decoded
      * @param {Number} maxBufferSize the maximum size of a incoming message; larger messages will throw an error
      */
-    slip.Decoder = function (onMessage, maxBufferSize) {
-        this.msgData = [];
-        this.onMessage = onMessage;
-        this.maxBufferSize = maxBufferSize || 104857600; // Defaults to 100 MB.
+    slip.Decoder = function (o) {
+        o = typeof o !== "function" ? o || {} : {
+            onMessage: o
+        };
+
+        this.maxMessageSize = o.maxMessageSize || 104857600; // Defaults to 100 MB.
+        this.bufferSize = o.bufferSize || 10240; // Message buffer defaults to 10 KB.
+        this.msgBuffer = new Uint8Array(this.bufferSize);
+        this.msgBufferIdx = 0;
+        this.onMessage = o.onMessage;
+        this.onError = o.onError;
         this.escape = false;
     };
 
@@ -116,45 +127,57 @@ var slip = slip || {};
                 }
 
                 if (val === slip.END) {
-                    this.handleEnd();
+                    msg = this.handleEnd();
                     continue;
                 }
             }
 
             var more = this.addByte(val);
             if (!more) {
-                this.msgData.length = 0;
-                this.escape = false;
-
-                throw new Error("The message is too large; the maximum message size is " +
-                    this.maxBufferSize / 1024 + "KB. Use a larger maxBufferSize if necessary.");
+                this.handleMessageMaxError();
             }
         }
 
         return msg;
     };
 
+    p.handleMessageMaxError = function () {
+        if (this.onError) {
+            this.onError(this.msgBuffer.subarray(0),
+                "The message is too large; the maximum message size is " +
+                this.maxMessageSize / 1024 + "KB. Use a larger maxMessageSize if necessary.")
+        }
+
+        // Reset everything and carry on.
+        this.msgBufferIdx = 0;
+        this.escape = false;
+    };
+
     // Unsupported, non-API method.
     p.addByte = function (val) {
-        this.msgData.push(val);
+        if (this.msgBufferIdx > this.msgBuffer.length - 1) {
+            this.msgBuffer = slip.expandByteArray(this.msgBuffer);
+        }
+
+        this.msgBuffer[this.msgBufferIdx++] = val;
         this.escape = false;
 
-        return this.msgData.length < this.maxBufferSize;
+        return this.msgBuffer.length < this.maxMessageSize;
     };
 
     // Unsupported, non-API method.
     p.handleEnd = function () {
-        if (this.msgData.length === 0) {
+        if (this.msgBufferIdx === 0) {
             return; // Toss opening END byte and carry on.
         }
 
-        var msg = new Uint8Array(this.msgData);
+        var msg = slip.sliceByteArray(this.msgBuffer, 0, this.msgBufferIdx);
         if (this.onMessage) {
             this.onMessage(msg);
         }
 
-        // Clear our internal message buffer.
-        this.msgData.length = 0;
+        // Clear our pointer into the message buffer.
+        this.msgBufferIdx = 0;
 
         return msg;
     };
