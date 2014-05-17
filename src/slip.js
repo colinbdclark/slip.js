@@ -19,7 +19,7 @@ var slip = slip || {};
     }
 
     slip.END = 192;
-    slip.ESC = 291;
+    slip.ESC = 219;
     slip.ESC_END = 220;
     slip.ESC_ESC = 221;
 
@@ -27,33 +27,51 @@ var slip = slip || {};
         return data instanceof ArrayBuffer ? new Uint8Array(data, offset, length) : data;
     };
 
+    slip.expandByteArray = function (arr) {
+        var expanded = new Uint8Array(arr.length * 2);
+        expanded.set(arr);
+
+        return expanded;
+    };
+
     /**
      * SLIP encodes a byte array.
      *
-     * @param {Array-like} data a a Uint8Array, Node.js Buffer, ArrayBuffer, or [] containing octets
+     * @param {Array-like} data a Uint8Array, Node.js Buffer, ArrayBuffer, or [] containing raw bytes
+     * @param {Object} option encoder options
      * @return {Uint8Array} the encoded copy of the data
      */
-    slip.encode = function (data, offset, length) {
-        data = slip.byteArray(data, offset, length);
+    slip.encode = function (data, o) {
+        o = o || {};
+        o.bufferPadding = o.bufferPadding || 1024; // Will be rounded to the nearest 4 bytes.
+        data = slip.byteArray(data, o.offset, o.length);
 
-        var encoded = [slip.END];
+        var bufLen = (data.length + o.bufferPadding + 3) & ~0x03,
+            encoded = new Uint8Array(bufLen),
+            j = 1;
+
+        encoded[0] = slip.END;
 
         for (var i = 0; i < data.length; i++) {
+            // We always need enough space for two value bytes plus a trailing END.
+            if (j > encoded.length - 3) {
+                encoded = slip.expandByteArray(encoded);
+            }
+
             var val = data[i];
             if (val === slip.END) {
-                encoded.push(slip.ESC);
+                encoded[j++] = slip.ESC;
                 val = slip.ESC_END;
             } else if (val === slip.ESC) {
-                encoded.push(slip.ESC);
+                encoded[j++] = slip.ESC;
                 val = slip.ESC_ESC;
             }
 
-            encoded.push(val);
+            encoded[j++] = val;
         }
 
-        encoded.push(slip.END);
-
-        return new Uint8Array(encoded);
+        encoded[j] = slip.END;
+        return encoded.subarray(0, j + 1);
     };
 
     /**

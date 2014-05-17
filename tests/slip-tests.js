@@ -81,7 +81,7 @@
                 ]
             },
             {
-                name: "both escapes and ends",
+                name: "both escapes and ends, large message size",
                 message: [
                     slip.ESC, 105, 32, 114,
                     101, 109, 101, 109,
@@ -103,7 +103,8 @@
                     101, 32, slip.ESC, slip.ESC_END, 49,
                     57, 57, 48, 115,
                     0, 0, slip.END
-                ]
+                ],
+                bufferPadding: 2
             }
         ],
 
@@ -209,7 +210,9 @@
     var tests = {
         encode: function (testSpec) {
             test(testSpec.name, function () {
-                var actual = slip.encode(testSpec.message);
+                var actual = slip.encode(testSpec.message, {
+                    bufferPadding: testSpec.bufferPadding
+                });
 
                 // TODO: This will likely fail in Node.js due to their TypedArray implementation.
                 deepEqual(actual, new Uint8Array(testSpec.encoded),
