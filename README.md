@@ -1,7 +1,7 @@
 slip.js
 =======
 
-slip.js is a library for encoding and decoding [Serial Line Internet Protocol](http://tools.ietf.org/html/rfc1055) packets in JavaScript. It works in both Node.js and in a web browser.
+slip.js is a JavaScript library for encoding and decoding [Serial Line Internet Protocol](http://tools.ietf.org/html/rfc1055) packets. It works in both Node.js and in a web browser.
 
 How Do I Use It?
 ----------------
@@ -48,7 +48,7 @@ var slipEncoded = slip.encode(message); // Result is [192, 99, 97, 33, 192]</pre
 
 ### Decoding
 
-Decoding is stateful and asynchronous. You need to instantiate a `slip.Decoder` object, providing a callback that will be invoked whenever a complete message is received. By default, messages are limited to 100 MB in size. You can increase this value by providing a `maxBufferSize` as the second argument to the `Decoder` constructor, specified in bytes.
+Decoding is stateful and asynchronous. You need to instantiate a `slip.Decoder` object, providing a callback that will be invoked whenever a complete message is received. By default, messages are limited to 10 MB in size. You can increase this value by providing a `maxBufferSize` option to the `Decoder` constructor, specified in bytes.
 
 To decode a SLIP packet, call `decode()`. Whenever the `slip.Decoder` detects the end of an incoming message, it will call its `onMessage` callback.
 
@@ -69,11 +69,6 @@ decoder.decode(otherPacket);</pre></code>
 
 #### Options
 
-/*
-this.maxMessageSize = o.maxMessageSize || 104857600; // Defaults to 100 MB.
-this.bufferSize = o.bufferSize || 1024; // Message buffer defaults to 1 KB.
-this.onMessage = o.onMessage;
-this.onError = o.onError;
 <table>
     <tr>
         <th>Option</th>
