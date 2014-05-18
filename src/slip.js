@@ -42,13 +42,13 @@ var slip = slip || {};
      * SLIP encodes a byte array.
      *
      * @param {Array-like} data a Uint8Array, Node.js Buffer, ArrayBuffer, or [] containing raw bytes
-     * @param {Object} option encoder options
+     * @param {Object} options encoder options
      * @return {Uint8Array} the encoded copy of the data
      */
     slip.encode = function (data, o) {
         o = o || {};
-        o.bufferPadding = o.bufferPadding || 1024; // Will be rounded to the nearest 4 bytes.
-        data = slip.byteArray(data, o.offset, o.length);
+        o.bufferPadding = o.bufferPadding || 4; // Will be rounded to the nearest 4 bytes.
+        data = slip.byteArray(data, o.offset, o.byteLength);
 
         var bufLen = (data.length + o.bufferPadding + 3) & ~0x03,
             encoded = new Uint8Array(bufLen),
@@ -90,8 +90,8 @@ var slip = slip || {};
             onMessage: o
         };
 
-        this.maxMessageSize = o.maxMessageSize || 104857600; // Defaults to 100 MB.
-        this.bufferSize = o.bufferSize || 10240; // Message buffer defaults to 10 KB.
+        this.maxMessageSize = o.maxMessageSize || 10485760; // Defaults to 10 MB.
+        this.bufferSize = o.bufferSize || 1024; // Message buffer defaults to 1 KB.
         this.msgBuffer = new Uint8Array(this.bufferSize);
         this.msgBufferIdx = 0;
         this.onMessage = o.onMessage;

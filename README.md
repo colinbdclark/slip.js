@@ -17,11 +17,99 @@ Encoding is stateless and synchronous. `slip.encode()` takes any array-like obje
 <pre><code>var message = new Uint8Array([99, 97, 116, 33]);
 var slipEncoded = slip.encode(message); // Result is [192, 99, 97, 33, 192]</pre></code>
 
+#### Options
+
+<table>
+    <tr>
+        <th>Option</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default value</th>
+    </tr>
+    <tr>
+        <td>bufferPadding</td>
+        <td><code>Number</code></td>
+        <td>_Optional_. The number of bytes to add to the message's length when initializing the encoder's internal buffer.</td>
+        <td>4</td>
+    </tr>
+    <tr>
+        <td>offset</td>
+        <td><code>Number</code></td>
+        <td>_Optional_. An offset index into the <code>data</code> argument to start reading the message from.</td>
+        <td><code>undefined</code></td>
+    </tr>
+    <tr>
+        <td>byteLength</td>
+        <td><code>Number</code></td>
+        <td>_Optional_. The number of bytes of the <code>data</code> argument to read.</td>
+        <td><code>undefined</code></td>
+    </tr>
+</table>
+
 ### Decoding
 
 Decoding is stateful and asynchronous. You need to instantiate a `slip.Decoder` object, providing a callback that will be invoked whenever a complete message is received. By default, messages are limited to 100 MB in size. You can increase this value by providing a `maxBufferSize` as the second argument to the `Decoder` constructor, specified in bytes.
 
-To decode a SLIP packet, call `decode()`. Whenever the `slip.Decoder` detects the end of an incoming message, it will call its `onMessage` callback. The `onMessage` callback's signature is:
+To decode a SLIP packet, call `decode()`. Whenever the `slip.Decoder` detects the end of an incoming message, it will call its `onMessage` callback.
+
+#### Example
+
+<pre><code>var logMessage = function (msg) {
+    console.log("A SLIP message was received! Here is it: " + msg);
+};
+
+var decoder = new slip.Decoder({
+    onMessage: logMessage,
+    maxMessageSize: 209715200,
+    bufferSize: 2048
+});
+
+decoder.decode(packet);
+decoder.decode(otherPacket);</pre></code>
+
+#### Options
+
+/*
+this.maxMessageSize = o.maxMessageSize || 104857600; // Defaults to 100 MB.
+this.bufferSize = o.bufferSize || 1024; // Message buffer defaults to 1 KB.
+this.onMessage = o.onMessage;
+this.onError = o.onError;
+<table>
+    <tr>
+        <th>Option</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default value</th>
+    </tr>
+    <tr>
+        <td>bufferSize</td>
+        <td><code>Number</code></td>
+        <td>_Optional_. The initial size of the decoder's internal buffer. It will be resized as necessary.</td>
+        <td><code>1024</code></td>
+    </tr>
+    <tr>
+        <td>maxMessageSize</td>
+        <td><code>Number</code></td>
+        <td>_Optional_. The maximum size of incoming messages, in bytes. Messages larger than this value will cause the <code>onError</code> callback to be invoked.</td>
+        <td>10485760 (10 MB)</td>
+    </tr>
+    <tr>
+        <td>onMessage</td>
+        <td><code>Function</code></td>
+        <td>A callback that will be invoked whenever a complete message is decoded.</td>
+        <td><code>undefined</code></td>
+    </tr>
+    <tr>
+        <td>onError</td>
+        <td><code>Function</code></td>
+        <td>A callback that will be invoked whenever an error occurs.</td>
+        <td><code>undefined</code></td>
+    </tr>
+</table>
+
+#### Events
+
+The `onMessage` callback's signature is:
 
 <table>
     <tr>
@@ -36,15 +124,25 @@ To decode a SLIP packet, call `decode()`. Whenever the `slip.Decoder` detects th
     </tr>
 </table>
 
-#### Example
+The `onError` callback's signature is:
 
-<pre><code>var onMessage = function (msg) {
-    console.log("A SLIP message was received! Here is it: " + msg);
-};
-
-var decoder = new slip.Decoder(onMessage, 209715200);
-decoder.decode(packet);
-decoder.decode(otherPacket);</pre></code>
+<table>
+    <tr>
+        <th>Argument</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td>msgBuffer</td>
+        <td><code>Uint8Array</code></td>
+        <td>A copy of the internal message buffer.</td>
+    </tr>
+    <tr>
+        <td>errorMsg</td>
+        <td><code>String</code></td>
+        <td>The error message.</td>
+    </tr>
+</table>
 
 License
 -------
