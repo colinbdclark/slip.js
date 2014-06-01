@@ -36,8 +36,5 @@
         "grunt-contrib-qunit": "~0.5.1",
         "grunt-node-qunit": "~2.0.2"
     },
-    "dependencies": {},
-    "engines": {
-        "node": "0.10.x"
-    }
+    "dependencies": {}
 }
