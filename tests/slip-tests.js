@@ -1,4 +1,4 @@
-/*global QUnit, equal, deepEqual, osc, test, ok*/
+/*global slip, QUnit, deepEqual, test*/
 
 (function () {
 
@@ -248,7 +248,7 @@
 
             for (var i = 0; i < testSpecsForType.length; i++) {
                 var testSpec = testSpecsForType[i];
-                tests[testType](testSpec)
+                tests[testType](testSpec);
             }
         }
     };

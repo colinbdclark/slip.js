@@ -35,7 +35,8 @@ var slip = slip || {};
     };
 
     slip.sliceByteArray = function (arr, start, end) {
-        return new Uint8Array(arr.buffer.slice(start, end));
+        var sliced = arr.buffer.slice ? arr.buffer.slice(start, end) : arr.subarray(start, end);
+        return new Uint8Array(sliced);
     };
 
     /**
@@ -145,7 +146,7 @@ var slip = slip || {};
         if (this.onError) {
             this.onError(this.msgBuffer.subarray(0),
                 "The message is too large; the maximum message size is " +
-                this.maxMessageSize / 1024 + "KB. Use a larger maxMessageSize if necessary.")
+                this.maxMessageSize / 1024 + "KB. Use a larger maxMessageSize if necessary.");
         }
 
         // Reset everything and carry on.

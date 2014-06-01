@@ -7,7 +7,7 @@ module.exports = function(grunt) {
         pkg: grunt.file.readJSON("package.json"),
 
         jshint: {
-            all: ["src/slip.js", "tests/**.*.js"],
+            all: ["src/slip.js", "tests/**/*.js"],
             options: {
                 jshintrc: true
             }
@@ -30,15 +30,25 @@ module.exports = function(grunt) {
             }
         },
 
-        githooks: {
+        qunit: {
+            all: ["tests/**/*.html"]
+        },
+
+        "node-qunit": {
             all: {
-                "pre-commit": "default",
+                code: {
+                    path: "./src/slip.js",
+                    namespace: "slip"
+                },
+                tests: "./tests/slip-tests.js"
             }
         },
 
         slipjs: {
             banners: {
-                short: "/*! slip.js <%= pkg.version %>, Copyright <%= grunt.template.today('yyyy') %> Colin Clark | flockingjs.org */\n\n"
+                short: "/*! slip.js <%= pkg.version %>, " +
+                    "Copyright <%= grunt.template.today('yyyy') %> Colin Clark | " +
+                    "github.com/colinbdclark/slip.js */\n\n"
             }
         }
     });
@@ -47,7 +57,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks("grunt-contrib-uglify");
     grunt.loadNpmTasks("grunt-contrib-clean");
     grunt.loadNpmTasks("grunt-contrib-jshint");
-    grunt.loadNpmTasks("grunt-githooks");
+    grunt.loadNpmTasks("grunt-contrib-qunit");
+    grunt.loadNpmTasks("grunt-node-qunit");
 
-    grunt.registerTask("default", ["clean", "jshint", "uglify"]);
+    grunt.registerTask("default", ["clean", "jshint", "uglify", "qunit", "node-qunit"]);
 };
