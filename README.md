@@ -14,8 +14,10 @@ Encoding is stateless and synchronous. `slip.encode()` takes any array-like obje
 
 #### Example
 
-<pre><code>var message = new Uint8Array([99, 97, 116, 33]);
-var slipEncoded = slip.encode(message); // Result is [192, 99, 97, 33, 192]</pre></code>
+```javascript
+var message = new Uint8Array([99, 97, 116, 33]);
+var slipEncoded = slip.encode(message); // Result is [192, 99, 97, 33, 192]
+```
 
 #### Options
 
@@ -54,7 +56,8 @@ To decode a SLIP packet, call `decode()`. Whenever the `slip.Decoder` detects th
 
 #### Example
 
-<pre><code>var logMessage = function (msg) {
+```javascript
+var logMessage = function (msg) {
     console.log("A SLIP message was received! Here is it: " + msg);
 };
 
@@ -65,7 +68,8 @@ var decoder = new slip.Decoder({
 });
 
 decoder.decode(packet);
-decoder.decode(otherPacket);</pre></code>
+decoder.decode(otherPacket);
+```
 
 #### Options
 
@@ -142,4 +146,4 @@ The `onError` callback's signature is:
 License
 -------
 
-slip.js was written by Colin Clark and is distributed under the MIT and GPL 3 licenses.
+slip.js is written by Colin Clark and distributed under the MIT and GPL 3 licenses.
