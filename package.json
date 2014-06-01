@@ -1,7 +1,7 @@
 {
     "name": "slip",
     "main": "src/slip.js",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A Serial Line Internet Protocol (SLIP) library that runs in Node.js and the browser.",
     "author": "Colin Clark",
     "homepage": "https://github.com/colinbdclark/slip.js",
