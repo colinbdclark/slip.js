@@ -1,7 +1,7 @@
 {
     "name": "slip",
     "main": "src/slip.js",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "A Serial Line Internet Protocol (SLIP) library that runs in Node.js and the browser.",
     "author": "Colin Clark",
     "homepage": "https://github.com/colinbdclark/slip.js",
@@ -10,16 +10,7 @@
         "url": "git://github.com/colinbdclark/slip.js.git"
     },
     "bugs": "https://github.com/colinbdclark/slip.js/issues",
-    "licenses": [
-        {
-            "type": "MIT",
-            "url": "http://opensource.org/licenses/MIT"
-        },
-        {
-            "type": "GPL",
-            "url": "http://opensource.org/licenses/GPL-3.0"
-        }
-    ],
+    "license": "(MIT OR GPL-2.0)",
     "keywords": [
         "Serial Line Internet Protocol",
         "SLIP",
