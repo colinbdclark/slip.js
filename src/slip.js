@@ -5,18 +5,30 @@
  * Licensed under the MIT and GPL 3 licenses.
  */
 
-/* global module */
+/*global exports, define*/
+(function (root, factory) {
+    "use strict";
 
-var slip = slip || {};
-
-(function () {
+    if (typeof exports === "object") {
+        // We're in a CommonJS-style loader.
+        root.slip = exports;
+        factory(exports);
+    } else if (typeof define === "function" && define.amd) {
+        // We're in an AMD-style loader.
+        define(["exports"], function (exports) {
+            root.slip = exports;
+            return (root.slip, factory(exports));
+        });
+    } else {
+        // Plain old browser.
+        root.slip = {};
+        factory(root.slip);
+    }
+}(this, function (exports) {
 
     "use strict";
 
-    // If we're in a require-compatible environment, export ourselves.
-    if (typeof module !== "undefined" && module.exports) {
-        module.exports = slip;
-    }
+    var slip = exports;
 
     slip.END = 192;
     slip.ESC = 219;
@@ -183,4 +195,5 @@ var slip = slip || {};
         return msg;
     };
 
-}());
+    return slip;
+}));
