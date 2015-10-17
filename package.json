@@ -27,5 +27,8 @@
         "grunt-contrib-qunit": "~0.5.1",
         "grunt-node-qunit": "~2.0.2"
     },
-    "dependencies": {}
+    "dependencies": {},
+    "scripts": {
+        "test": "node tests/node-all-tests.js"
+    }
 }
