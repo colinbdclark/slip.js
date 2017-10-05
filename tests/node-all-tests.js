@@ -17,7 +17,7 @@ testRunner.setup({
 testRunner.run([
     {
         code: {
-            path: __dirname + "/../src/slip.js",
+            path: __dirname + "/../dist/slip.min.js",
             namespace: "slip"
         },
         tests: __dirname + "/slip-tests.js"

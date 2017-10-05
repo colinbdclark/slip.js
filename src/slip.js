@@ -1,104 +1,85 @@
 /*
  * slip.js: A plain JavaScript SLIP implementation that works in both the browser and Node.js
  *
- * Copyright 2014, Colin Clark
+ * Copyright 2017, Colin Clark
  * Licensed under the MIT and GPL 3 licenses.
  */
 
-/*global exports, define*/
-(function (root, factory) {
-    "use strict";
+/*jshint esversion:6 */
+/*jshint node:true */
 
-    if (typeof exports === "object") {
-        // We're in a CommonJS-style loader.
-        root.slip = exports;
-        factory(exports);
-    } else if (typeof define === "function" && define.amd) {
-        // We're in an AMD-style loader.
-        define(["exports"], function (exports) {
-            root.slip = exports;
-            return (root.slip, factory(exports));
-        });
-    } else {
-        // Plain old browser.
-        root.slip = {};
-        factory(root.slip);
-    }
-}(this, function (exports) {
+"use strict";
 
-    "use strict";
+const END = 192;
+const ESC = 219;
+const ESC_END = 220;
+const ESC_ESC = 221;
 
-    var slip = exports;
+export function byteArray (data, offset, length) {
+    return data instanceof ArrayBuffer ? new Uint8Array(data, offset, length) : data;
+}
 
-    slip.END = 192;
-    slip.ESC = 219;
-    slip.ESC_END = 220;
-    slip.ESC_ESC = 221;
+export function expandByteArray (arr) {
+    var expanded = new Uint8Array(arr.length * 2);
+    expanded.set(arr);
 
-    slip.byteArray = function (data, offset, length) {
-        return data instanceof ArrayBuffer ? new Uint8Array(data, offset, length) : data;
-    };
+    return expanded;
+}
 
-    slip.expandByteArray = function (arr) {
-        var expanded = new Uint8Array(arr.length * 2);
-        expanded.set(arr);
+export function sliceByteArray (arr, start, end) {
+    var sliced = arr.buffer.slice ? arr.buffer.slice(start, end) : arr.subarray(start, end);
+    return new Uint8Array(sliced);
+}
 
-        return expanded;
-    };
+/**
+ * SLIP encodes a byte array.
+ *
+ * @param {Array-like} data a Uint8Array, Node.js Buffer, ArrayBuffer, or [] containing raw bytes
+ * @param {Object} options encoder options
+ * @return {Uint8Array} the encoded copy of the data
+ */
+export function encode (data, o) {
+    o = o || {};
+    o.bufferPadding = o.bufferPadding || 4; // Will be rounded to the nearest 4 bytes.
+    data = byteArray(data, o.offset, o.byteLength);
 
-    slip.sliceByteArray = function (arr, start, end) {
-        var sliced = arr.buffer.slice ? arr.buffer.slice(start, end) : arr.subarray(start, end);
-        return new Uint8Array(sliced);
-    };
+    var bufLen = (data.length + o.bufferPadding + 3) & ~0x03,
+        encoded = new Uint8Array(bufLen),
+        j = 1;
 
-    /**
-     * SLIP encodes a byte array.
-     *
-     * @param {Array-like} data a Uint8Array, Node.js Buffer, ArrayBuffer, or [] containing raw bytes
-     * @param {Object} options encoder options
-     * @return {Uint8Array} the encoded copy of the data
-     */
-    slip.encode = function (data, o) {
-        o = o || {};
-        o.bufferPadding = o.bufferPadding || 4; // Will be rounded to the nearest 4 bytes.
-        data = slip.byteArray(data, o.offset, o.byteLength);
+    encoded[0] = END;
 
-        var bufLen = (data.length + o.bufferPadding + 3) & ~0x03,
-            encoded = new Uint8Array(bufLen),
-            j = 1;
-
-        encoded[0] = slip.END;
-
-        for (var i = 0; i < data.length; i++) {
-            // We always need enough space for two value bytes plus a trailing END.
-            if (j > encoded.length - 3) {
-                encoded = slip.expandByteArray(encoded);
-            }
-
-            var val = data[i];
-            if (val === slip.END) {
-                encoded[j++] = slip.ESC;
-                val = slip.ESC_END;
-            } else if (val === slip.ESC) {
-                encoded[j++] = slip.ESC;
-                val = slip.ESC_ESC;
-            }
-
-            encoded[j++] = val;
+    for (var i = 0; i < data.length; i++) {
+        // We always need enough space for two value bytes plus a trailing END.
+        if (j > encoded.length - 3) {
+            encoded = expandByteArray(encoded);
         }
 
-        encoded[j] = slip.END;
-        return slip.sliceByteArray(encoded, 0, j + 1);
-    };
+        var val = data[i];
+        if (val === END) {
+            encoded[j++] = ESC;
+            val = ESC_END;
+        } else if (val === ESC) {
+            encoded[j++] = ESC;
+            val = ESC_ESC;
+        }
 
-    /**
-     * Creates a new SLIP Decoder.
-     * @constructor
-     *
-     * @param {Function} onMessage a callback function that will be invoked when a message has been fully decoded
-     * @param {Number} maxBufferSize the maximum size of a incoming message; larger messages will throw an error
-     */
-    slip.Decoder = function (o) {
+        encoded[j++] = val;
+    }
+
+    encoded[j] = END;
+    return sliceByteArray(encoded, 0, j + 1);
+}
+
+/**
+ * Creates a new SLIP Decoder.
+ * @constructor
+ *
+ * @param {Function} onMessage a callback function that will be invoked when a message has been fully decoded
+ * @param {Number} maxBufferSize the maximum size of a incoming message; larger messages will throw an error
+ */
+export class Decoder {
+    constructor(o) {
         o = typeof o !== "function" ? o || {} : {
             onMessage: o
         };
@@ -110,9 +91,7 @@
         this.onMessage = o.onMessage;
         this.onError = o.onError;
         this.escape = false;
-    };
-
-    var p = slip.Decoder.prototype;
+    }
 
     /**
      * Decodes a SLIP data packet.
@@ -120,26 +99,26 @@
      *
      * @param {Array-like} data an incoming stream of bytes
      */
-    p.decode = function (data) {
-        data = slip.byteArray(data);
+    decode(data) {
+        data = byteArray(data);
 
         var msg;
         for (var i = 0; i < data.length; i++) {
             var val = data[i];
 
             if (this.escape) {
-                if (val === slip.ESC_ESC) {
-                    val = slip.ESC;
-                } else if (val === slip.ESC_END) {
-                    val = slip.END;
+                if (val === ESC_ESC) {
+                    val = ESC;
+                } else if (val === ESC_END) {
+                    val = END;
                 }
             } else {
-                if (val === slip.ESC) {
+                if (val === ESC) {
                     this.escape = true;
                     continue;
                 }
 
-                if (val === slip.END) {
+                if (val === END) {
                     msg = this.handleEnd();
                     continue;
                 }
@@ -152,9 +131,9 @@
         }
 
         return msg;
-    };
+    }
 
-    p.handleMessageMaxError = function () {
+    handleMessageMaxError() {
         if (this.onError) {
             this.onError(this.msgBuffer.subarray(0),
                 "The message is too large; the maximum message size is " +
@@ -164,27 +143,27 @@
         // Reset everything and carry on.
         this.msgBufferIdx = 0;
         this.escape = false;
-    };
+    }
 
     // Unsupported, non-API method.
-    p.addByte = function (val) {
+    addByte(val) {
         if (this.msgBufferIdx > this.msgBuffer.length - 1) {
-            this.msgBuffer = slip.expandByteArray(this.msgBuffer);
+            this.msgBuffer = expandByteArray(this.msgBuffer);
         }
 
         this.msgBuffer[this.msgBufferIdx++] = val;
         this.escape = false;
 
         return this.msgBuffer.length < this.maxMessageSize;
-    };
+    }
 
     // Unsupported, non-API method.
-    p.handleEnd = function () {
+    handleEnd() {
         if (this.msgBufferIdx === 0) {
             return; // Toss opening END byte and carry on.
         }
 
-        var msg = slip.sliceByteArray(this.msgBuffer, 0, this.msgBufferIdx);
+        var msg = sliceByteArray(this.msgBuffer, 0, this.msgBufferIdx);
         if (this.onMessage) {
             this.onMessage(msg);
         }
@@ -193,7 +172,7 @@
         this.msgBufferIdx = 0;
 
         return msg;
-    };
+    }
+}
 
-    return slip;
-}));
+
