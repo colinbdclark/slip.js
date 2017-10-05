@@ -1,6 +1,8 @@
 {
     "name": "slip",
-    "main": "src/slip.js",
+    "main": "dist/slip.umd.js",
+    "module": "src/slip.js",
+    "browser": "dist/slip.min.js",
     "version": "1.0.2",
     "description": "A Serial Line Internet Protocol (SLIP) library that runs in Node.js and the browser.",
     "author": "Colin Clark",
@@ -13,22 +15,20 @@
     "license": "(MIT OR GPL-2.0)",
     "keywords": [
         "Serial Line Internet Protocol",
-        "SLIP",
-        "Open Sound Control",
-        "OSC"
+        "SLIP"
     ],
     "readmeFilename": "README.md",
     "devDependencies": {
-        "qunit": "0.6.2",
-        "grunt": "~0.4.2",
-        "grunt-contrib-uglify": "~0.3.2",
-        "grunt-contrib-clean": "~0.4.1",
-        "grunt-contrib-jshint": "~0.8.0",
-        "grunt-contrib-qunit": "~0.5.1",
-        "grunt-node-qunit": "~2.0.2"
+        "jshint": "^2.9.5",
+        "qunit": "^0.9.3",
+        "rollup": "^0.50.0",
+        "rollup-plugin-buble": "^0.16.0",
+        "rollup-plugin-uglify": "^2.0.1"
     },
     "dependencies": {},
     "scripts": {
+        "lint": "jshint src/*.js",
+        "build": "rollup -c rollup.config.js",
         "test": "node tests/node-all-tests.js"
     }
 }
